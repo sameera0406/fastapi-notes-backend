@@ -4,6 +4,9 @@ import models
 from database import SessionLocal, engine
 from fastapi.middleware.cors import CORSMiddleware
 
+# This line MUST exist and be named 'app'
+app = FastAPI()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://sameera-db.vercel.app/"], # Replace with your actual Vercel URL
@@ -11,8 +14,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# This line MUST exist and be named 'app'
-app = FastAPI()
 
 # This creates the tables in Supabase automatically
 models.Base.metadata.create_all(bind=engine)
