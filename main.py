@@ -8,7 +8,6 @@ app = FastAPI()
 
 # This creates the tables in Supabase automatically
 models.Base.metadata.create_all(bind=engine)
-
 def get_db():
     db = SessionLocal()
     try:
@@ -31,3 +30,6 @@ def create_note(title: str, user_id: str = Header(...), db: Session = Depends(ge
     db.commit()
     db.refresh(new_note)
     return new_note
+@app.on_event("startup")
+def startup():
+    models.Base.metadata.create_all(bind=engine)
