@@ -2,22 +2,24 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
 
-# 1. Get the URL from Render's dashboard
-url = os.getenv("DATABASE_URL")
+# 1. Load local .env if it exists (for local testing)
+load_dotenv()
 
-# 2. Safety Check: If Render hasn't loaded the variable yet, don't crash
-if not url:
-    raise ValueError("No DATABASE_URL found in environment variables")
+# 2. Get the URL from Render (Cloud) or .env (Local)
+# On Render, this will find the "DATABASE_URL" you added to the Environment tab
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# 3. Standardize the prefix
-if url.startswith("postgres://"):
-    url = url.replace("postgres://", "postgresql://", 1)
+# 3. If Render gives 'postgres://', change it to 'postgresql://' for SQLAlchemy
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# 4. Create engine with SSL requirements for Supabase
+# 4. Create the engine with SSL required (as per Supabase docs)
+# pool_pre_ping=True helps keep the connection alive in India/Singapore
 engine = create_engine(
-    url,
-    connect_args={"sslmode": "require"}, # Required for many cloud providers
+    DATABASE_URL, 
+    connect_args={"sslmode": "require"},
     pool_pre_ping=True
 )
 
