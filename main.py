@@ -2,7 +2,15 @@ from fastapi import FastAPI, Depends, Header,HTTPException
 from sqlalchemy.orm import Session
 import models
 from database import SessionLocal, engine
+from fastapi.middleware.cors import CORSMiddleware
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://your-vercel-domain.vercel.app"], # Replace with your actual Vercel URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # This line MUST exist and be named 'app'
 app = FastAPI()
 
