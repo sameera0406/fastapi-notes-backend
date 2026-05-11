@@ -18,9 +18,14 @@ def get_db():
 # --- THE "ONLY MY NOTES" LOGIC ---
 
 @app.get("/notes")
-def read_notes(user_id: str = Header(...), db: Session = Depends(get_db)):
-    # This filters the DB so only the user's notes are visible
-    return db.query(models.Note).filter(models.Note.user_id == user_id).all()
+def get_notes(user_id: str = Header(None), db: Session = Depends(get_db)):
+    if not user_id:
+        raise HTTPException(status_code=401, detail="User ID missing in headers")
+    
+    # This is the "Privacy Lock"
+    # It ensures the database only returns rows matching this specific UUID
+    notes = db.query(models.Note).filter(models.Note.user_id == user_id).all()
+    return notes
 
 @app.post("/notes")
 def create_note(title: str, user_id: str = Header(...), db: Session = Depends(get_db)):
