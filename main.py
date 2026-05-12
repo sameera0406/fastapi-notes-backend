@@ -36,9 +36,8 @@ async def get_notes(user_id: Optional[str] = Header(None, alias="user_id")):
     
     # Debugging: This will show up in your Render Logs
     print(f"Received request for User: {user_id}")
-    
-    # Your logic to fetch from Supabase...
-    return []
+    return db.query(models.Note).filter(models.Note.user_id == user_id).all()
+    return notes
 
 @app.post("/notes")
 def create_note(title: str, user_id: str = Header(...), db: Session = Depends(get_db)):
