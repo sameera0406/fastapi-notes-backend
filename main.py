@@ -25,7 +25,9 @@ def get_db():
         db.close()
 
 # --- THE "ONLY MY NOTES" LOGIC ---
-
+@app.get("/")
+def home():
+    return {"message": "Security Guard is Live!"}
 @app.get("/notes")
 def get_notes(user_id: str = Header(None), db: Session = Depends(get_db)):
     if not user_id:
