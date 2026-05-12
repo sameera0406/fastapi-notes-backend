@@ -1,12 +1,12 @@
-from fastapi import FastAPI, Depends, Header,HTTPException
+from fastapi import FastAPI, Depends, Header, HTTPException
 from sqlalchemy.orm import Session
 import models
 from database import SessionLocal, engine
 from fastapi.middleware.cors import CORSMiddleware
 
-# This line MUST exist and be named 'app'
 app = FastAPI()
 
+# --- CORS CONFIGURATION ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -18,8 +18,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# This creates the tables in Supabase automatically
+# Create tables
 models.Base.metadata.create_all(bind=engine)
+
 def get_db():
     db = SessionLocal()
     try:
@@ -27,35 +28,34 @@ def get_db():
     finally:
         db.close()
 
-# --- THE "ONLY MY NOTES" LOGIC ---
 @app.get("/")
 def home():
-    return {"message": "Security Guard is Live!"}
+    return {"status": "online", "message": "Security Guard is Live!"}
+
+# --- THE FIX: convert_underscores=False ---
 @app.get("/notes")
 def get_notes(
-    user_id: str = Header(None),
+    # We set convert_underscores=False so it looks for 'user_id' exactly
+    user_id: str = Header(None, convert_underscores=False), 
     db: Session = Depends(get_db)
 ):
     if not user_id:
         raise HTTPException(
             status_code=401,
-            detail="User ID header missing"
+            detail="The security guard returned: User ID header missing"
         )
 
-    notes = db.query(models.Note)\
-        .filter(models.Note.user_id == user_id)\
-        .all()
-
+    notes = db.query(models.Note).filter(models.Note.user_id == user_id).all()
     return notes
 
 @app.post("/notes")
-def create_note(title: str, user_id: str = Header(...), db: Session = Depends(get_db)):
-    # This 'stamps' the note with the user's ID in the DB
+def create_note(
+    title: str, 
+    user_id: str = Header(..., convert_underscores=False), 
+    db: Session = Depends(get_db)
+):
     new_note = models.Note(title=title, user_id=user_id)
     db.add(new_note)
     db.commit()
     db.refresh(new_note)
     return new_note
-@app.on_event("startup")
-def startup():
-    models.Base.metadata.create_all(bind=engine)
