@@ -32,14 +32,20 @@ def get_db():
 def home():
     return {"message": "Security Guard is Live!"}
 @app.get("/notes")
-# By using Header(alias="user_id"), we tell FastAPI exactly what to look for
-async def get_notes(user_id: Optional[str] = Header(None, alias="user_id")):
+def get_notes(
+    user_id: str = Header(None),
+    db: Session = Depends(get_db)
+):
     if not user_id:
-        return {"detail": "User ID missing in headers"}
-    
-    # Debugging: This will show up in your Render Logs
-    print(f"Received request for User: {user_id}")
-    return db.query(models.Note).filter(models.Note.user_id == user_id).all()
+        raise HTTPException(
+            status_code=401,
+            detail="User ID header missing"
+        )
+
+    notes = db.query(models.Note)\
+        .filter(models.Note.user_id == user_id)\
+        .all()
+
     return notes
 
 @app.post("/notes")
